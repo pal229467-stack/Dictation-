@@ -1,0 +1,301 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily English Story Tool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    background: white;
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    max-width: 620px;
+    margin: auto;
+  }
+
+  h2 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 6px;
+  }
+
+  .level-badge {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  .story-box {
+    background: #f9f9f9;
+    border-left: 4px solid #4CAF50;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 17px;
+    line-height: 1.8;
+    color: #222;
+    margin-bottom: 18px;
+    min-height: 80px;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  button {
+    padding: 11px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #4CAF50;
+    color: white;
+    transition: background 0.2s;
+  }
+  button:hover { background: #388e3c; }
+  button.secondary {
+    background: #5c6bc0;
+  }
+  button.secondary:hover { background: #3949ab; }
+
+  /* History Section */
+  .history-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 16px;
+  }
+
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .history-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f0f4ff;
+    border: 1px solid #c5cae9;
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .history-card:hover {
+    background: #e3e8ff;
+    box-shadow: 0 2px 8px rgba(92,107,192,0.15);
+  }
+
+  .history-card .card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .history-card .card-date {
+    font-size: 12px;
+    color: #7986cb;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .history-card .card-topic {
+    font-size: 15px;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .history-card .card-arrow {
+    font-size: 20px;
+    color: #9fa8da;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .modal-date {
+    font-size: 12px;
+    font-weight: bold;
+    color: #7986cb;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .modal-topic {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 14px;
+  }
+
+  .modal-story {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #444;
+    background: #f9f9f9;
+    border-left: 4px solid #7986cb;
+    padding: 14px;
+    border-radius: 8px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #aaa;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+  }
+  .modal-close:hover { color: #555; background: none; }
+
+  .no-history {
+    font-size: 14px;
+    color: #aaa;
+    text-align: center;
+    padding: 12px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📘 Daily English Story</h2>
+  <div class="level-badge" id="level"></div>
+  <div class="story-box" id="story"></div>
+  <div class="buttons">
+    <button onclick="nextStory()">🔄 Next Story</button>
+    <button class="secondary" onclick="openTodayAgain()">📖 Today's Story</button>
+  </div>
+
+  <div class="history-title">📅 Story History</div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-date" id="modalDate"></div>
+    <div class="modal-topic" id="modalTopic"></div>
+    <div class="modal-story" id="modalStory"></div>
+  </div>
+</div>
+
+<script>
+const stories = {
+2: [
+  "Riya has a red ball. She loves her ball very much. Every day she goes to the park near her house. She plays with the ball for a long time. One day her friend Tina comes to the park. Tina also wants to play. Riya shares her ball with Tina. They play together and laugh a lot. Both girls are very happy.",
+
+  "A cat lives in a small house. The cat's name is Fluffy. Fluffy likes to sit on a soft mat near the window. Every afternoon the sun shines on the mat and Fluffy sleeps there for a long time. The family loves Fluffy very much. They give her milk and fish every day. Fluffy purrs loudly and rubs against their legs. She is a very happy and lucky cat.",
+
+  "Tom has a big blue kite. He got it as a birthday gift from his uncle. One Sunday he goes to the open ground near his school. He holds the kite and runs very fast across the field. Slowly the kite rises up into the sky. It flies higher and higher above the trees. Tom is very excited and laughs with joy. His little sister claps her hands and cheers for him loudly.",
+
+  "Mia has a brown dog named Bruno. Bruno is very playful and friendly with everyone. Every morning Mia gives Bruno his food and a bowl of fresh water. Bruno wags his tail happily and jumps with great joy. After eating they go for a long walk in the garden. Bruno runs fast and sniffs all the flowers along the path. Mia laughs at his funny face. They are the very best of friends.",
+
+  "It is a bright and sunny day. Ben wakes up early and runs outside to play in the garden. Suddenly he spots a beautiful butterfly sitting quietly on a yellow flower. The butterfly has big yellow wings with small black spots on them. Ben walks very slowly towards it so that it does not fly away. He watches it for a long time without making any noise. He feels very happy and peaceful seeing such a pretty little insect.",
+
+  "Sam has a big red box in his room. He keeps all his favourite toys inside it carefully. He has small cars, colourful balls, and tiny animal toys of all kinds. Every evening after school he opens the box and plays for one hour. When he finishes playing he puts all the toys back neatly into the box. His mother is very happy because Sam always keeps his room tidy and clean without being told.",
+
+  "A little orange fish lives in a round glass bowl near the window. The fish swims round and round all day long without stopping. It blows tiny bubbles in the water that float up and pop. Every morning the boy who owns the fish sprinkles a little food into the bowl. The fish rushes to the top and eats it quickly. The boy watches it every day and never gets bored. It is his favourite calm and quiet pet.",
+
+  "Leo loves eating fresh fruits every day. His absolute favourite fruit is the big red apple. Every afternoon after school he picks one apple from the basket on the kitchen table. He washes it carefully under clean running water. Then he bites into it with a big crunch. The apple is sweet, juicy, and delicious. Leo says eating an apple every day gives him good energy to study and play. His mother smiles because he always chooses healthy food."
+],
+3: [
+  "Ravi has a small white dog named Moti. Moti loves drinking warm milk every morning after waking up. Every evening Ravi clips on Moti's leash and takes him to the park for a long walk. Moti runs around joyfully and plays with other dogs he meets there. When they return home Ravi gives Moti a gentle bath with warm water. Moti shakes his wet fur all over Ravi and makes him laugh. They spend every single evening together very happily.",
+
+  "Mina goes to school every single day without fail. She wakes up early each morning, gets ready quickly, and packs her bag with all her books and notebooks. She loves her school very much and never wants to miss a day. Her favourite subject is English and she reads every story book she can find. She always shares the stories she reads with her classmates during lunch. Her teacher praises her often for being so regular, kind, and hardworking.",
+
+  "Every morning the sun rises slowly and gently over the green hills outside the village. The sky turns beautiful shades of pink, orange, and gold. Birds sitting in the trees begin singing their sweet morning songs. Children in the village wake up to those cheerful sounds. They wash their faces with cold water, eat a warm breakfast, and get ready for school. The morning air feels fresh and cool. Everyone starts their new day with a bright smile and full energy.",
+
+  "Priya has a small and lovely garden outside her house. She has planted roses, marigolds, and tulsi plants in neat rows. Every morning before going to school she waters all the plants carefully using a small watering can. She also removes dry leaves and unwanted weeds from the soil. After a few weeks of daily care the garden is full of bright and colourful flowers. Neighbours slow down to admire it while walking past. Priya feels very proud of her beautiful garden.",
+
+  "Anu loves to draw and paint more than anything else. Every weekend she sits at her study table with her colour pencils and sketch book. One Sunday she draws a lovely picture of a house with tall green trees, a blue flowing river, and a bright yellow sun in the sky. It looks very beautiful and full of life. Her mother is so proud and happy that she sticks the drawing on the wall of the sitting room for everyone to see.",
+
+  "It is raining very heavily outside today. Raj puts on his bright yellow raincoat and his big rubber boots before stepping out of the house. He absolutely loves the rain and feels excited every time it pours. He walks along the road and finds several big muddy puddles of water. He jumps into every puddle with both feet and splashes water all around him. He laughs loudly and dances in the falling rain. His grandmother watches him from the window and smiles warmly.",
+
+  "A small brown bird decides it is time to build a new nest for her eggs. She flies from tree to tree carefully looking for the right spot with good cover. She collects dry grass, soft leaves, small twigs, and bits of cotton from the garden. She weaves all of them together very patiently and skillfully. After two full days of hard work the nest is ready. It looks perfectly round and wonderfully cozy. Soon three tiny blue eggs appear inside the nest.",
+
+  "Mohan loves spending time with his father on lazy Sunday mornings. One Sunday his father smiles and asks him to help wash the family car. Mohan feels excited and rushes to get a bucket of soapy water and a big sponge. Together they scrub every corner and surface of the car carefully. Then they rinse off all the soap with a strong jet of clean water from the hose. When they finish the car shines like brand new. His father ruffles his hair proudly."
+],
+4: [
+  "Anil was walking home from school one quiet evening when he heard a faint whimpering sound near the garden gate. He looked down carefully and found a tiny lost puppy shivering in the corner behind a bush. He picked it up very gently and carried it home in his arms. He gave it warm milk and placed it on a soft folded cloth to sleep. He took care of it every day. Slowly the puppy grew stronger, healthier, and became his most loyal and loving friend.",
+
+  "Sara found a small dried seed in her mother's kitchen one afternoon. She decided to try planting it in an old clay pot in the garden. She dug a small hole with her finger, placed the seed carefully inside, and covered it with soft soil. Every single morning she watered it gently and looked closely for any sign of growth. After ten patient days a tiny bright green shoot pushed its way up through the soil. Sara was so thrilled that she called all her friends to come and see.",
+
+  "One Saturday morning Rohan noticed that his mother looked very tired after a long and difficult week of work. Without being asked or told he quietly picked up the broom and started sweeping the floor of every room. He then dusted the shelves, folded the clean laundry, and arranged the shoes neatly by the door. When his mother walked into the sitting room she stopped and stared in complete surprise. Her eyes filled with happy tears. She pulled Rohan into a tight hug and told him she was incredibly proud of him.",
+
+  "Reena had forgotten to bring her umbrella to school on a day when heavy rain suddenly started pouring in the afternoon. Dark clouds had gathered very quickly without warning and the rain came down hard and cold. She stood helplessly under the school gate feeling worried. Just then her classmate Pooja walked up beside her with a big colourful umbrella. Pooja smiled and opened it wide for both of them. She shared it with Reena all the way home through the rain. Reena thanked her from the heart and they walked home laughing.",
+
+  "One afternoon Vikram spotted a small bird sitting very still and alone under a garden bush. He looked closely and saw that one of its wings was bent and clearly hurt. The poor bird could not fly at all. Vikram carefully picked it up with both hands and brought it inside the house. He lined an old shoebox with soft cloth and placed the bird inside gently. He gave it water and tiny crumbs of bread every single day. After nearly two weeks the bird flapped both wings and flew freely out the window.",
+
+  "The old baker in the small town woke up well before sunrise every single morning of the year without exception. He mixed flour, water, salt, and yeast together by hand to make soft dough. He shaped each loaf carefully and slid them into his large stone oven. The warm and wonderful smell of freshly baked bread drifted through the whole street every morning. Customers lined up cheerfully outside his little shop. The baker greeted every single one of them with a warm smile and a kind word.",
+
+  "Pooja kept all her stationery organised neatly inside her favourite bright pink pencil box. One busy afternoon at school she searched through her bag again and again but could not find the box anywhere. She began to feel very worried and upset. After the last period ended her friend Anita came running towards her with a wide grin on her face. She had found the pencil box lying quietly under the wooden classroom bench. Pooja felt a huge wave of relief wash over her. She hugged Anita tightly and thanked her again and again.",
+
+  "On a bitterly cold winter evening Raju spotted a thin and shivering stray dog sitting just outside his front door. The dog looked up at him with tired and frightened eyes. Raju felt very sorry for the poor creature. He opened the door wide and gently guided the dog inside the warm house. He spread a soft woollen blanket on the floor for it to lie on. He placed a bowl of warm water and a few biscuits beside it. The dog ate slowly, curled up on the blanket, and slept soundly through the cold night."
+],
+5: [
+  "One warm afternoon Neha was walking back from the market when she noticed an old man struggling slowly along the road with two very heavy bags. He looked exhausted and was stopping every few steps to rest. Neha quickly crossed over to him and offered to carry one of the bags. The old man hesitated for a moment and then accepted gratefully. She walked beside him all the way to his house nearby. He thanked her sincerely and said that young people like her give him real hope for the future.",
+
+  "A farmer named Daya worked in his field every single day throughout the year without taking a single day off. He woke up before sunrise, ploughed the earth carefully, and sowed his seeds at exactly the right time. He never wasted water and always kept the field free of weeds. He was patient even when the rains came late. One good monsoon season after years of steady effort he got the best and largest harvest of his entire farming life. His family celebrated with joy and the whole village praised his dedication.",
+
+  "Mrs. Sharma began Monday morning's English class with a short and powerful story about a poor but deeply honest young boy. In the story the boy found a leather purse stuffed with money lying on the road. Instead of keeping it he walked to the nearest police station and handed it in without touching a single coin. After finishing the story Mrs. Sharma asked the class what lesson they had taken from it. Every single student raised their hand at once. The classroom buzzed with thoughtful and enthusiastic discussion for the rest of the period.",
+
+  "Sonia was reading quietly in the garden one afternoon when she noticed a tiny sparrow sitting completely still near the base of the rose bush. One of its wings drooped at an odd angle and it clearly could not fly. Sonia walked over very slowly and carefully lifted the bird with both hands. She brought it inside and prepared a soft bed in a small cardboard box lined with cotton. She gave it water using a dropper and offered it grains of rice. Each day it grew a little stronger. One bright morning it flapped both wings and flew away.",
+
+  "Dev and his four closest friends wanted to spend their summer holidays doing something truly meaningful. They made a joint decision to save their pocket money every single week for two full months instead of spending it on snacks and outings. Each one put aside whatever they could manage. At the end of two months they pooled everything together and had enough to purchase a large box of storybooks and textbooks. They donated the entire collection to the children of a small village school nearby. The happiness on those children's faces stayed with them for a very long time.",
+
+  "Shyam was the postman of a quiet little village and had been doing his job with great dedication for over twenty years. He walked several miles on foot every day through blazing summer heat, heavy monsoon rain, and bitter winter cold to deliver letters and parcels to every home. He knew the name and story of every family in the village. He always had a kind word and a cheerful smile for each person he met. Farmers, teachers, and children all looked forward to seeing him arrive. Shyam believed his work connected people and that kept him going.",
+
+  "Meera had fallen in love with classical dance when she was barely four years old watching her aunt perform at a family function. She began learning formally at age six and practised for at least one hour every single evening after finishing her homework, even on days when she felt tired. Her mother and grandmother sat together and watched her rehearse every night. At the school annual function she was chosen to give the lead performance. When the music began she danced with her whole heart. When she finished the entire auditorium rose to its feet and applauded.",
+
+  "Raju sat in class that morning with a growing feeling of dread as he remembered he had completely forgotten to complete his science homework. When the teacher asked everyone to place their notebooks on the desk his heart started beating very fast. Instead of inventing an excuse he stood up quietly, walked to the front, and told the teacher honestly that he had simply forgotten to do it. The teacher looked at him steadily for a long moment. Then she nodded and said she respected his honesty. After school she sat with him and helped him complete every question."
+],
+6: [
+  "Twelve-year-old Arjun was walking briskly to sc
